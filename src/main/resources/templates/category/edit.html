@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Sửa Loại Sách</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                    <div class="card-header text-white py-3"
+                        style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);">
+                        <h4 class="mb-0 fw-bold text-center">
+                            <i class="fas fa-edit me-2"></i>Chỉnh Sửa Loại Sách
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/categories/edit}" th:object="${category}" method="post">
+                            <input type="hidden" th:field="*{id}">
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-bold text-muted small text-uppercase">Tên Loại
+                                    Sách</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i
+                                            class="fas fa-tag text-warning"></i></span>
+                                    <input type="text" class="form-control bg-light border-0 py-2" id="name"
+                                        th:field="*{name}" required placeholder="Nhập tên loại sách"
+                                        style="border-radius: 0 8px 8px 0;">
+                                </div>
+                                <div class="text-danger small mt-1" th:if="${#fields.hasErrors('name')}"
+                                    th:errors="*{name}"></div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                                <a th:href="@{/categories}" class="btn btn-light px-4 py-2 fw-bold text-muted">
+                                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-warning px-4 py-2 fw-bold shadow-sm">
+                                    <i class="fas fa-save me-1"></i> Cập Nhật
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

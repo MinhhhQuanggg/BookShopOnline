@@ -1,63 +1,538 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách của tôi</title>
+    <title>Danh sách sách - HUTECH Books</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    <th:block th:replace="~{layout::link-css}"></th:block>
-    <th:block th:replace="~{layout::custom-css}"></th:block>
+        main {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-bar form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 0.8rem 1.2rem;
+            flex: 1;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .search-bar input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.3rem rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .search-bar button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .search-bar button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-add-book {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-add-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-info {
+            color: #000;
+            /* force black text inside cards */
+        }
+
+        .book-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.2rem;
+        }
+
+        .book-main {
+            flex: 1 1 auto;
+            min-width: 260px;
+        }
+
+        .book-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 1rem;
+            align-items: center;
+        }
+
+        .book-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+            min-height: auto;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+        }
+
+        .book-author {
+            font-size: 0.95rem;
+            color: #222;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .book-price {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #e74c3c;
+            margin: 0;
+            white-space: nowrap;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .book-category {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0066cc;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin: 0;
+            width: fit-content;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 0.6rem;
+            flex: 0 0 auto;
+        }
+
+        .book-actions>* {
+            flex: 0 0 auto;
+        }
+
+        .action-btn {
+            height: 44px;
+            border-radius: 10px;
+            padding: 0 0.9rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .action-form {
+            margin: 0;
+        }
+
+        .action-form button {
+            width: 100%;
+        }
+
+        .btn-cart {
+            min-width: 140px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+
+        .btn-edit {
+            min-width: 110px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+
+        .btn-delete {
+            min-width: 110px;
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(235, 51, 73, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 1.1rem;
+        }
+
+        .pagination {
+            justify-content: center;
+            margin-top: 3rem;
+            gap: 0.5rem;
+        }
+
+        .pagination a,
+        .pagination span {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 0.6rem 1.2rem;
+            transition: all 0.3s ease;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .pagination a:hover {
+            border-color: #667eea;
+            background-color: #f5f5f5;
+        }
+
+        .pagination .active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .book-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .book-main {
+                min-width: 0;
+            }
+
+            .book-price {
+                text-align: left;
+                min-width: 0;
+            }
+
+            .book-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .search-bar form {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
+
 <body>
+    <!-- HEADER -->
+    <header th:replace="~{layout :: header}"></header>
 
-<th:block th:replace="~{layout::header}"></th:block>
+    <main>
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <h2 class="m-0 fw-bold">Danh sách sách</h2>
+                <div class="d-flex gap-2" sec:authorize="hasAuthority('ADMIN')">
+                    <form th:action="@{/books/import}" method="post" enctype="multipart/form-data"
+                        class="d-flex gap-2 align-items-center">
+                        <input type="file" name="file" class="form-control form-control-sm" accept=".xlsx, .xls"
+                            required style="width: auto;">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-file-import"></i> Import Excel
+                        </button>
+                    </form>
+                    <a href="/books/add" class="btn-add-book m-0">
+                        Thêm sách
+                    </a>
+                </div>
+            </div>
 
-<div class="container">
+            <div th:if="${successMessage}" id="flash-success"
+                class="alert alert-success d-flex align-items-center gap-2" role="alert" data-autohide="3000">
+                <i class="fas fa-check-circle"></i>
+                <div th:text="${successMessage}">Đã thực hiện thành công.</div>
+            </div>
 
-    <table class="table">
-        <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Action</th>
-        </tr>
+            <div th:if="${errorMessage}" id="flash-error" class="alert alert-danger d-flex align-items-center gap-2"
+                role="alert" data-autohide="5000">
+                <i class="fas fa-exclamation-circle"></i>
+                <div th:text="${errorMessage}">Có lỗi xảy ra.</div>
+            </div>
 
-        <tr th:each="book : ${books}">
-            <td th:text="${book.getId()}"></td>
-            <td th:text="${book.getTitle()}"></td>
-            <td th:text="${book.getAuthor()}"></td>
-            <td th:text="${book.getPrice()}"></td>
-            <td th:text="${book.getCategory()}"></td>
-            <td colspan="2">
-                <a class="btn btn-primary"
-                   th:href="@{/books/edit/{id}(id=${book.getId()})}">
-                    Edit
-                </a>
-
-<!--                <a class="btn btn-danger"-->
-<!--                   th:href="@{/books/delete/{id}(id=${book.getId()})}"-->
-<!--                   onclick="return confirm('Are you sure you want to delete this book?')">-->
-<!--                    Delete-->
-<!--                </a>-->
-                <form th:action="@{/books/delete/{id}(id=${book.getId()})}"
-                      method="post"
-                      style="display:inline;"
-                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa sách này không?')">
-
-                    <button type="submit" class="btn btn-danger">
-                        Delete
-                    </button>
+            <div th:if="${param.error}" id="flash-param-error"
+                class="alert alert-warning d-flex align-items-center gap-2" role="alert" data-autohide="3000">
+                <i class="fas fa-triangle-exclamation"></i>
+                <div th:text="${param.error}">Thông báo từ hệ thống.</div>
+            </div>
+            <!-- SEARCH & FILTER BAR -->
+            <div class="search-bar">
+                <form th:action="@{/books}" method="get" class="row g-2">
+                    <div class="col-md-6">
+                        <input type="text" id="keyword" name="keyword" data-live-search="true" autocomplete="off"
+                            placeholder="Tìm kiếm sách theo tên, tác giả..." th:value="${keyword}">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="categoryId" name="categoryId" class="form-select">
+                            <option value="">Tất cả loại sách</option>
+                            <option th:each="category : ${categories}" th:value="${category.id}"
+                                th:text="${category.name}" th:selected="${category.id == selectedCategoryId}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="w-100"><i class="fas fa-search"></i> Tìm</button>
+                    </div>
                 </form>
-            </td>
-        </tr>
-    </table>
+            </div>
 
-</div>
+            <div id="books-results">
+                <th:block th:fragment="results">
+                    <!-- EMPTY STATE -->
+                    <div th:if="${#lists.isEmpty(books)}" class="empty-state">
+                        <i class="fas fa-book"></i>
+                        <p>Không có sách nào trong hệ thống</p>
+                    </div>
 
-<th:block th:replace="~{layout::footer}"></th:block>
+                    <!-- BOOKS GRID -->
+                    <div th:if="${!#lists.isEmpty(books)}" class="row g-3">
+                        <div th:each="book : ${books}" class="col-12">
+                            <div class="book-card">
+                                <!-- Book Info -->
+                                <div class="book-info">
+                                    <div class="book-row">
+                                        <div class="book-main">
+                                            <h5 class="book-title" th:text="${book.title}">Tiêu đề sách</h5>
+                                            <div class="book-meta">
+                                                <p class="book-author" th:if="${book.author}">
+                                                    <span th:text="${book.author}">Tác giả</span>
+                                                </p>
+                                                <div class="book-category" th:if="${book.category != null}"
+                                                    th:text="${book.category.name}">Danh mục</div>
+                                            </div>
+                                        </div>
 
+                                        <div class="book-price"
+                                            th:text="'₫' + ${book.price != null ? #numbers.formatDecimal(book.price, 0, 0) : '0'}">
+                                            ₫0</div>
+
+                                        <div class="book-actions">
+                                            <form th:action="@{/books/add-to-cart}" method="post" class="action-form">
+                                                <input type="hidden" name="id" th:value="${book.id}">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="action-btn btn-cart"
+                                                    sec:authorize="isAuthenticated()">
+                                                    <i class="fas fa-cart-plus"></i> Giỏ hàng
+                                                </button>
+
+                                            </form>
+
+                                            <th:block
+                                                th:if="${isAdmin == true or (currentUserId != null and book.user != null and book.user.id == currentUserId)}">
+                                                <a th:href="@{/books/edit/{id}(id=${book.id})}"
+                                                    class="action-btn btn-edit" title="Sửa">
+                                                    <i class="fas fa-edit"></i> Sửa
+                                                </a>
+                                                <a th:href="@{/books/delete/{id}(id=${book.id})}"
+                                                    class="action-btn btn-delete" title="Xóa"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa sách này?')">
+                                                    <i class="fas fa-trash"></i> Xóa
+                                                </a>
+                                            </th:block>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+
+            <!-- PAGINATION -->
+            <div th:if="${!#lists.isEmpty(books)}" class="pagination">
+                <a th:if="${currentPage > 0}"
+                    th:href="@{/books(pageNo=${currentPage - 1},pageSize=${pageSize},sortBy=${sortBy},keyword=${keyword},categoryId=${selectedCategoryId})}">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span class="active"
+                    th:text="${(totalPages == 0 ? 1 : currentPage + 1) + ' / ' + (totalPages == 0 ? 1 : totalPages)}"></span>
+                <a th:if="${totalPages == 0 || currentPage + 1 < totalPages}"
+                    th:href="@{/books(pageNo=${currentPage + 1},pageSize=${pageSize},sortBy=${sortBy},keyword=${keyword},categoryId=${selectedCategoryId})}">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+            </th:block>
+        </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer th:replace="~{layout :: footer}"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const input = document.getElementById('keyword');
+            const categorySelect = document.getElementById('categoryId');
+            const results = document.getElementById('books-results');
+            if (!input || !results) return;
+
+            let lastController = null;
+            let t = null;
+
+            async function fetchResults(url) {
+                if (lastController) lastController.abort();
+                lastController = new AbortController();
+
+                const res = await fetch(url, {
+                    signal: lastController.signal,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) return null;
+                return await res.text();
+            }
+
+            async function updateResults(params) {
+                const url = '/books/live?' + params.toString();
+                try {
+                    const html = await fetchResults(url);
+                    if (html == null) return;
+                    results.innerHTML = html;
+                } catch (e) {
+                    /* ignore */
+                }
+            }
+
+            function handleInput() {
+                if (t) window.clearTimeout(t);
+                t = window.setTimeout(function () {
+                    const params = new URLSearchParams();
+                    params.set('keyword', input.value || '');
+                    params.set('categoryId', categorySelect.value || '');
+                    params.set('pageNo', '0');
+                    params.set('pageSize', '20');
+                    params.set('sortBy', 'id');
+                    updateResults(params);
+                }, 250);
+            }
+
+            input.addEventListener('input', handleInput);
+            categorySelect.addEventListener('change', handleInput);
+
+            document.addEventListener('click', function (e) {
+                const a = e.target.closest('.pagination a');
+                if (!a) return;
+                // If the link is within the results div, we hijack it for AJAX
+                if (results.contains(a)) {
+                    e.preventDefault();
+                    try {
+                        const u = new URL(a.href);
+                        const params = new URLSearchParams(u.search);
+                        updateResults(params);
+                    } catch (err) {
+                        /* ignore */
+                    }
+                }
+            });
+        })();
+
+        setTimeout(function () {
+            const success = document.getElementById('flash-success');
+            const error = document.getElementById('flash-error');
+            const paramError = document.getElementById('flash-param-error');
+            if (success) success.style.display = 'none';
+            if (error) error.style.display = 'none';
+            if (paramError) paramError.style.display = 'none';
+        }, 3000);
+    </script>
 </body>
+
 </html>

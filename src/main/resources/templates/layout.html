@@ -1,66 +1,469 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chương trình quản lý sách</title>
+    <title>HUTECH - Quản Lý Sách</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <link th:fragment="link-css"
-          rel="stylesheet"
-          th:href="@{/css/bootstrap.min.css}">
+        html,
+        body {
+            height: 100%;
+        }
 
-    <link th:fragment="custom-css"
-          rel="stylesheet"
-          th:href="@{/css/style.css}">
+        body {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #000;
+            /* Make main content text black for readability */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Header/Navbar */
+        .navbar {
+            background: #ffffff;
+            box-shadow: none;
+            padding: 0.85rem 0;
+            position: relative;
+            z-index: 2000;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #111827 !important;
+            margin-left: 0;
+            letter-spacing: 1px;
+            opacity: 1 !important;
+        }
+
+        .navbar-brand i {
+            margin-right: 8px;
+        }
+
+        .navbar-nav .nav-link {
+            color: #111827 !important;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            font-weight: 600;
+            opacity: 1 !important;
+        }
+
+        .navbar-nav .nav-link i,
+        .navbar-brand i,
+        .btn-logout i {
+            margin-right: 0.4rem;
+        }
+
+        /* Ensure page content (not navbar) uses solid black text */
+        main,
+        .container,
+        .card,
+        .book-card,
+        .search-bar,
+        .error-container {
+            color: #000 !important;
+        }
+
+        /* Make links in content area dark by default */
+        a:not(.nav-link) {
+            color: #0a0a0a;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background-color: #f3f4f6;
+            color: #111827 !important;
+            transform: none;
+            opacity: 1 !important;
+        }
+
+        .navbar-nav .nav-link.active {
+            background-color: #f3f4f6;
+            color: #111827 !important;
+            box-shadow: none;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: none;
+            color: #111827;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .btn-logout:hover {
+            background-color: #f3f4f6;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #ffed4e;
+            text-decoration: underline;
+        }
+
+        /* General Card Styling */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Button Styling */
+        .btn {
+            border-radius: 8px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(235, 51, 73, 0.4);
+            color: white;
+        }
+
+        /* Form Styling */
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 0.7rem 1rem;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background-color: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Alert Styling */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table Styling */
+        .table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Badge Styling */
+        .badge {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 
-<body class="d-flex flex-column h-100">
+<body>
+    <!-- HEADER -->
+    <header th:fragment="header">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold text-dark" href="/">
+                    <i class="fas fa-book-open"></i> HUTECH Books
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/">
+                                <i class="fas fa-home"></i> Home
+                            </a>
+                        </li>
 
-<header th:fragment="header">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">HUTECH</a>
+                        <!-- USER & ADMIN: List Book -->
+                        <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link text-dark" th:href="@{/books}">
+                                <i class="fas fa-list"></i> List Book
+                            </a>
+                        </li>
 
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                        <!-- API-based List Book -->
+                        <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link text-dark" th:href="@{/books/api-list}">
+                                <i class="fas fa-code"></i> API Book List
+                            </a>
+                        </li>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/books">List Book</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/books/add">Add Book</a>
-                    </li>
-                </ul>
+                        <!-- USER: Add Book (Mới thêm) -->
+                        <li class="nav-item" sec:authorize="hasAuthority('USER')">
+                            <a class="nav-link text-dark" th:href="@{/books/add}">
+                                <i class="fas fa-plus-circle"></i> Add Book
+                            </a>
+                        </li>
+
+                        <!-- ADMIN: Add Book -->
+                        <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+                            <a class="nav-link text-dark" th:href="@{/books/add}">
+                                <i class="fas fa-plus-circle"></i> Add Book
+                            </a>
+                        </li>
+
+                        <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link text-dark" th:href="@{/cart}">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                            </a>
+                        </li>
+
+                        <!-- Community Chat (Real-time) -->
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-dark" th:href="@{/chat}">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                        </li>
+
+                        <!-- ADMIN Only: Users Management -->
+                        <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+                            <a class="nav-link text-dark" th:href="@{/admin/users}">
+                                <i class="fas fa-users-cog"></i> Users
+                            </a>
+                        </li>
+
+                        <!-- ADMIN Only: Category Management -->
+                        <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+                            <a class="nav-link text-dark" th:href="@{/categories}">
+                                <i class="fas fa-folder-open"></i> Categories
+                            </a>
+                        </li>
+
+                        <!-- USER & ADMIN: Profile Info -->
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-dark" href="#">
+                                <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
+                            </a>
+                        </li>
+                        <li sec:authorize="isAuthenticated()" class="nav-item">
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button class="btn btn-logout btn-sm" type="submit">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                        <li sec:authorize="!isAuthenticated()" class="nav-item">
+                            <a class="btn btn-light btn-sm" th:href="@{/login}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
+        </nav>
+    </header>
+
+    <!-- FRAGMENTS FOR ERROR PAGES -->
+    <th:block th:fragment="link-css">
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </th:block>
+
+    <th:block th:fragment="custom-css">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                display: flex;
+                flex-direction: column;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .navbar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                padding: 1rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: white !important;
+                margin-left: 2rem;
+                letter-spacing: 1px;
+            }
+
+            footer {
+                margin-top: auto;
+                padding: 2rem;
+                text-align: center;
+                color: #666;
+                font-size: 0.9rem;
+            }
+        </style>
+    </th:block>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <div layout:fragment="content"></div>
         </div>
-    </nav>
-</header>
+    </main>
 
-<div class="container">
-    <div th:fragment="content"></div>
-</div>
+    <!-- FOOTER -->
+    <footer th:fragment="footer" class="app-footer">
+        <style>
+            .app-footer {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1500;
+                background: rgba(255, 255, 255, 0.92);
+                border-top: 1px solid #e5e7eb;
+                text-align: center;
+                padding: 16px 0;
+                backdrop-filter: blur(10px);
+            }
+        </style>
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2026 - Ứng dụng Quản lý Sách
+                <!--            <strong>Spring Boot</strong> & <strong>MySQL</strong>-->
+            </p>
+            <small class="mt-2 d-block">
+                Powered by <a href="https://www.hutech.edu.vn/" target="_blank" rel="noopener noreferrer">HUTECH</a>
+            </small>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var footer = document.querySelector('.app-footer');
+                function syncFooterSpace() {
+                    if (!footer) return;
+                    document.body.style.paddingBottom = footer.offsetHeight + 'px';
+                }
 
-<footer th:fragment="footer" class="footer mt-auto py-3 bg-light">
-    <div class="container text-center">
-        Copyright &copy;
-        <span th:text="${#dates.year(#dates.createNow())}"></span>
-        <a href="https://www.hutech.edu.vn/">HUTECH Education</a>
-    </div>
+                document.querySelectorAll('[data-autohide]').forEach(function (el) {
+                    var ms = parseInt(el.getAttribute('data-autohide') || '', 10);
+                    if (!Number.isFinite(ms) || ms <= 0) return;
+                    window.setTimeout(function () { el.style.display = 'none'; }, ms);
+                });
+
+                syncFooterSpace();
+                window.addEventListener('resize', syncFooterSpace);
+            });
+        </script>
+    </footer>
 
     <script th:src="@{/js/bootstrap.min.js}"></script>
     <script th:src="@{/js/jquery-3.7.0.min.js}"></script>
-</footer>
 </body>
+
 </html>

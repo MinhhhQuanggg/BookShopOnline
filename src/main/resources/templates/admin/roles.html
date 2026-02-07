@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Roles</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .role-badge {
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .role-user {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .role-guest {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <header th:replace="~{layout :: header}"></header>
+
+    <main class="container pb-5 pt-4">
+        <div class="header-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h2 class="m-0 fw-bold">
+                        <i class="fas fa-shield-alt me-2"></i>Quản lý Roles
+                    </h2>
+                    <p class="text-muted mb-0 mt-2">Quản lý các vai trò và quyền hạn trong hệ thống</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/users" class="btn btn-outline-secondary">
+                        <i class="fas fa-users me-2"></i>Quản lý Users
+                    </a>
+                    <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                        <i class="fas fa-plus me-2"></i>Thêm Role mới
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-box">
+                    <div class="stat-number" th:text="${#lists.size(roles)}">0</div>
+                    <div class="text-muted fw-semibold">Tổng số roles</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Tên Role</th>
+                            <th>Mô tả</th>
+                            <th style="width: 150px;" class="text-center">Số Users</th>
+                            <th style="width: 260px;" class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="role : ${roles}">
+                            <td th:text="${role.id}"></td>
+                            <td>
+                                <span th:text="${role.name}"
+                                    th:classappend="${role.name == 'ADMIN'} ? 'role-badge role-admin' : (${role.name == 'GUEST'} ? 'role-badge role-guest' : 'role-badge role-user')"
+                                    class="role-badge"></span>
+                            </td>
+                            <td th:text="${role.description ?: 'Chưa có mô tả'}"></td>
+                            <td class="text-center">
+                                <span class="badge bg-primary rounded-pill"
+                                    th:text="${#lists.size(role.users)}">0</span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-2"
+                                    th:onclick="'editRole(' + ${role.id} + ', \'' + ${role.name} + '\', \'' + ${role.description} + '\')'"
+                                    data-bs-toggle="modal" data-bs-target="#editRoleModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                    th:onclick="'confirmDelete(' + ${role.id} + ', \'' + ${role.name} + '\')'">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Tạo role mới -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>Tạo Role mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/roles}" method="post" th:object="${newRole}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="createName" class="form-label fw-bold">Tên Role <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="createName" name="name" required
+                                placeholder="VD: MANAGER">
+                        </div>
+                        <div class="mb-3">
+                            <label for="createDescription" class="form-label fw-bold">Mô tả</label>
+                            <textarea class="form-control" id="createDescription" name="description" rows="3"
+                                placeholder="Mô tả ngắn gọn về vai trò này..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fas fa-save me-2"></i>Tạo Role
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sửa role -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa Role
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editRoleForm" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label fw-bold">Tên Role <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label fw-bold">Mô tả</label>
+                            <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form xóa (ẩn) -->
+    <form id="deleteForm" method="post" style="display: none;">
+        <input type="hidden" name="_method" value="delete">
+    </form>
+
+    <footer th:replace="~{layout :: footer}"></footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editRole(id, name, description) {
+            document.getElementById('editRoleForm').action = '/admin/roles/' + id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editDescription').value = description || '';
+        }
+
+        function confirmDelete(id, name) {
+            if (confirm('Bạn có chắc chắn muốn xóa role "' + name + '"?\n\nLưu ý: Không thể xóa role đang được sử dụng bởi users.')) {
+                const form = document.getElementById('deleteForm');
+                form.action = '/admin/roles/' + id + '/delete';
+                form.submit();
+            }
+        }
+    </script>
+</body>
+
+</html>

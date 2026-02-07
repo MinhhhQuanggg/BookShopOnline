@@ -6,7 +6,6 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- Spring Boot parent: QUAN TRỌNG, PHẢI GIỮ -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -16,13 +15,11 @@
 
 	<!-- Thông tin project -->
 	<groupId>fit.hutech</groupId>
-	<artifactId>spring</artifactId>
+	<artifactId>2280602561</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spring</name>
+	<name>Thai Minh Quang</name>
 	<description>Thực hành lập trình ứng dụng với java</description>
 
-	<!-- Các thẻ dưới đây KHÔNG ẢNH HƯỞNG CHẠY CHƯƠNG TRÌNH -->
-	<!-- Có thể giữ hoặc bỏ đều được -->
 	<url/>
 	<licenses>
 		<license/>
@@ -37,32 +34,22 @@
 		<url/>
 	</scm>
 
-	<!-- Phiên bản Java: PHẢI GIỮ -->
 	<properties>
 		<java.version>21</java.version>
 	</properties>
 
 	<dependencies>
 
-		<!-- ❌ KHÔNG DÙNG BÂY GIỜ -->
-		<!-- JPA + Database (chỉ dùng khi làm việc với CSDL) -->
-		<!-- Nếu bật mà không cấu hình datasource → APPLICATION FAIL -->
-		<!--
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
 
-		<!-- ✅ CẦN DÙNG -->
-		<!-- Spring Security: dùng cho cấu trúc project + bài sau -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- ✅ CẦN DÙNG -->
-		<!-- Thymeleaf: template engine cho giao diện -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -75,22 +62,16 @@
 			<version>26.0.1</version>
 		</dependency>
 
-		<!-- ✅ CẦN DÙNG -->
-		<!-- Spring MVC (Controller, RequestMapping, Model, View) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- ⚠️ CHƯA CẦN NGAY -->
-		<!-- Chỉ cần khi dùng sec:authorize trong HTML -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 
-		<!-- ✅ NÊN GIỮ -->
-		<!-- DevTools: tự reload khi sửa code -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -98,35 +79,30 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ❌ KHÔNG DÙNG BÂY GIỜ -->
-		<!-- MySQL Driver: chỉ dùng khi có DB -->
-		<!--
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        -->
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 
-		<!-- ✅ NÊN GIỮ -->
-		<!-- Lombok: giảm code getter/setter -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ❌ KHÔNG DÙNG BÂY GIỜ -->
-		<!-- Test cho JPA -->
-		<!--
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 
-		<!-- ⚠️ CHỈ DÙNG KHI VIẾT TEST -->
+		<!-- Validation (NotNull, @Valid, ...) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-test</artifactId>
@@ -135,14 +111,40 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf-test</artifactId>
-			<scope>test</scope>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-reactor-netty</artifactId>
+		</dependency>
+
+		<!-- Apache POI for Excel Import/Export -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.3.0</version>
+		</dependency>
+
+		<!-- Thymeleaf Layout Dialect -->
+		<dependency>
+			<groupId>nz.net.ultraq.thymeleaf</groupId>
+			<artifactId>thymeleaf-layout-dialect</artifactId>
 		</dependency>
 
 	</dependencies>

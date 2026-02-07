@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>HUTECH Chat - Real-time</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f7f6;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+
+        .chat-header {
+            padding: 15px 25px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        #messageArea {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            list-style-type: none;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message-sent {
+            background: #e3f2fd;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message-received {
+            background: #f1f0f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-message {
+            text-align: center;
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .username-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{layout :: header}"></div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h4><i class="fas fa-comments me-2"></i>HUTECH Book Community Chat</h4>
+        </div>
+        <ul id="messageArea">
+            <!-- Messages will appear here -->
+        </ul>
+        <div class="chat-footer">
+            <form id="messageForm" name="messageForm">
+                <div class="chat-input-group">
+                    <input type="text" id="message" placeholder="Type your message..." autocomplete="off"
+                        class="form-control" />
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout :: footer}"></footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script th:inline="javascript">
+        var username = /*[[${#authentication.name}]]*/ "guest";
+        var stompClient = null;
+        var messageArea = document.querySelector('#messageArea');
+        var messageForm = document.querySelector('#messageForm');
+        var messageInput = document.querySelector('#message');
+
+        function connect() {
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, onConnected, onError);
+        }
+
+        function onConnected() {
+            stompClient.subscribe('/topic/public', onMessageReceived);
+            stompClient.send("/app/chat.addUser", {}, JSON.stringify({ sender: username, type: 'JOIN' }));
+        }
+
+        function onError(error) {
+            console.error('Could not connect to WebSocket server. Please check RabbitMQ.');
+        }
+
+        function sendMessage(event) {
+            var messageContent = messageInput.value.trim();
+            if (messageContent && stompClient) {
+                var chatMessage = { sender: username, content: messageInput.value, type: 'CHAT' };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+            event.preventDefault();
+        }
+
+        function onMessageReceived(payload) {
+            var message = JSON.parse(payload.body);
+            var messageElement = document.createElement('li');
+
+            if (message.type === 'JOIN') {
+                messageElement.classList.add('event-message');
+                message.content = message.sender + ' joined!';
+            } else if (message.type === 'LEAVE') {
+                messageElement.classList.add('event-message');
+                message.content = message.sender + ' left!';
+            } else {
+                messageElement.classList.add('message');
+                if (message.sender === username) {
+                    messageElement.classList.add('message-sent');
+                } else {
+                    messageElement.classList.add('message-received');
+                }
+
+                var usernameElement = document.createElement('span');
+                usernameElement.classList.add('username-label');
+                usernameElement.appendChild(document.createTextNode(message.sender));
+                messageElement.appendChild(usernameElement);
+            }
+
+            var textElement = document.createElement('span');
+            textElement.appendChild(document.createTextNode(message.content));
+            messageElement.appendChild(textElement);
+
+            messageArea.appendChild(messageElement);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        messageForm.addEventListener('submit', sendMessage, true);
+        window.onload = connect;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .role-badge {
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .role-user {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+
+
+        .search-box {
+            border-radius: 50px;
+            border: 2px solid #667eea;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .search-box:focus {
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+            border-color: #667eea;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header th:replace="~{layout :: header}"></header>
+
+    <main class="container pb-5 pt-4">
+        <div class="header-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h2 class="m-0 fw-bold text-gradient">
+                        <i class="fas fa-users-cog me-2"></i>Quản lý người dùng
+                    </h2>
+                    <p class="text-muted mb-0 mt-2">Quản lý vai trò và quyền hạn của người dùng</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/users/add" class="btn btn-success text-white">
+                        <i class="fas fa-plus me-2"></i>Thêm người dùng
+                    </a>
+                    <a href="/admin/roles" class="btn btn-gradient">
+                        <i class="fas fa-shield-alt me-2"></i>Quản lý Roles
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card p-4 mb-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control search-box"
+                        placeholder="🔍 Tìm kiếm theo username hoặc email...">
+                </div>
+                <div class="col-md-4">
+                    <select id="roleFilter" class="form-select search-box">
+                        <option value="">Tất cả roles</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="USER">USER</option>
+
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button onclick="clearFilters()" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-redo me-2"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card p-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th style="width: 140px;">Provider</th>
+                            <th style="width: 200px;">Roles</th>
+                            <th style="width: 280px;" class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${users}" class="user-row">
+                            <td th:text="${u.id}"></td>
+                            <td th:text="${u.username}" class="username"></td>
+                            <td th:text="${u.email}" class="email"></td>
+                            <td th:text="${u.phone}"></td>
+                            <td th:text="${u.provider}"></td>
+                            <td class="user-roles">
+                                <span th:each="r : ${u.roles}" th:text="${r.name}"
+                                    th:classappend="${r.name == 'ADMIN'} ? 'role-badge role-admin' : 'role-badge role-user'"
+                                    class="me-1"></span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-gradient me-1"
+                                    th:onclick="'showRoleModal(' + ${u.id} + ', \'' + ${u.username} + '\', ' + ${u.roles} + ')'"
+                                    data-bs-toggle="modal" data-bs-target="#roleModal" title="Đổi role">
+                                    <i class="fas fa-user-shield"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info me-1"
+                                    th:onclick="'showUserDetail(' + ${u.id} + ')'" title="Chi tiết">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <a th:href="@{/admin/users/delete/{id}(id=${u.id})}" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này sẽ xóa cả giỏ hàng liên quan.')"
+                                    title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Cập nhật roles -->
+    <div class="modal fade" id="roleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-shield me-2"></i>Cập nhật roles cho <span id="modalUsername"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="roleForm" method="post">
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">Chọn các vai trò cho người dùng:</p>
+                        <div th:each="role : ${allRoles}" class="form-check mb-3">
+                            <input class="form-check-input role-checkbox" type="checkbox" name="roleIds"
+                                th:value="${role.id}" th:id="'role' + ${role.id}" th:data-role-name="${role.name}">
+                            <label class="form-check-label fw-bold" th:for="'role' + ${role.id}">
+                                <span th:text="${role.name}"
+                                    th:classappend="${role.name == 'ADMIN'} ? 'role-badge role-admin' : 'role-badge role-user'"
+                                    class="role-badge">ROLE</span>
+                                <span class="text-muted ms-2"
+                                    th:text="'- ' + ${role.description ?: 'Vai trò ' + role.name}">- Description</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{layout :: footer}"></footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show role modal
+        function showRoleModal(userId, username, userRoles) {
+            document.getElementById('modalUsername').innerText = username;
+            document.getElementById('roleForm').action = '/admin/users/' + userId + '/roles';
+
+            // Reset all checkboxes
+            const checkboxes = document.querySelectorAll('.role-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Check current roles based on user's role IDs
+            userRoles.forEach(userRole => {
+                const checkbox = document.querySelector(`input[value="${userRole.id}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', filterTable);
+        document.getElementById('roleFilter').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value;
+            const rows = document.querySelectorAll('#usersTable tbody tr');
+
+            rows.forEach(row => {
+                const username = row.querySelector('.username').textContent.toLowerCase();
+                const email = row.querySelector('.email').textContent.toLowerCase();
+                const roles = row.querySelector('.user-roles').textContent;
+
+                const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+                const matchesRole = !roleFilter || roles.includes(roleFilter);
+
+                row.style.display = matchesSearch && matchesRole ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('roleFilter').value = '';
+            filterTable();
+        }
+
+        function showUserDetail(userId) {
+            window.location.href = '/admin/users/' + userId;
+        }
+    </script>
+</body>
+
+</html>
