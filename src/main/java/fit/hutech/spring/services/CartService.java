@@ -2,8 +2,12 @@ package fit.hutech.spring.services;
 
 import fit.hutech.spring.daos.Cart;
 import fit.hutech.spring.daos.Item;
+import fit.hutech.spring.entities.Book;
 import fit.hutech.spring.entities.Invoice;
 import fit.hutech.spring.entities.ItemInvoice;
+import fit.hutech.spring.entities.PaymentMethod;
+import fit.hutech.spring.entities.PaymentStatus;
+import fit.hutech.spring.entities.StockMovementType;
 import fit.hutech.spring.entities.User;
 import fit.hutech.spring.repositories.IBookRepository;
 import fit.hutech.spring.repositories.ICartRepository;
@@ -22,12 +26,13 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(isolation = Isolation.SERIALIZABLE,
-        rollbackFor = {Exception.class, Throwable.class})
+@Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = { Exception.class, Throwable.class })
 public class CartService {
     private static final String CART_SESSION_KEY = "cart";
     private static final int MAX_DISTINCT_ITEMS = 50;
@@ -37,6 +42,7 @@ public class CartService {
     private final IBookRepository bookRepository;
     private final ICartRepository cartRepository;
     private final UserService userService;
+    private final InventoryService inventoryService;
 
     private User resolveUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -71,15 +77,15 @@ public class CartService {
                     book.getId(),
                     book.getTitle(),
                     row.getUnitPrice() == null ? book.getPrice() : row.getUnitPrice().doubleValue(),
-                    row.getQuantity() == null ? 1 : row.getQuantity()
-            ));
+                    row.getQuantity() == null ? 1 : row.getQuantity()));
         });
         return cart;
     }
 
     public Cart getCart(@NotNull HttpSession session, Authentication authentication) {
         Cart existing = (Cart) session.getAttribute(CART_SESSION_KEY);
-        if (existing != null) return existing;
+        if (existing != null)
+            return existing;
 
         User user = resolveUser(authentication);
         Cart cart = (user == null) ? new Cart() : buildSessionCartFromDb(user);
@@ -94,19 +100,17 @@ public class CartService {
     public void updateCart(@NotNull HttpSession session, Cart cart) {
         session.setAttribute(CART_SESSION_KEY, cart);
     }
+
     public void removeCart(@NotNull HttpSession session) {
         session.removeAttribute(CART_SESSION_KEY);
     }
+
     public int getSumQuantity(@NotNull HttpSession session) {
-        return getCart(session).getCartItems().stream()
-                .mapToInt(Item::getQuantity)
-                .sum();
+        return getCart(session).getCartItems().stream().mapToInt(Item::getQuantity).sum();
     }
+
     public double getSumPrice(@NotNull HttpSession session) {
-        return getCart(session).getCartItems().stream()
-                .mapToDouble(item -> item.getPrice() *
-                        item.getQuantity())
-                .sum();
+        return getCart(session).getCartItems().stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
     }
 
     private void ensureCartLimits(@NotNull Cart cart, Long addingBookId) {
@@ -120,12 +124,15 @@ public class CartService {
     }
 
     private int normalizeQuantity(int quantity) {
-        if (quantity < 1) throw new IllegalArgumentException("Quantity must be at least 1");
-        if (quantity > MAX_PER_ITEM) throw new IllegalArgumentException("Quantity must be at most " + MAX_PER_ITEM);
+        if (quantity < 1)
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        if (quantity > MAX_PER_ITEM)
+            throw new IllegalArgumentException("Quantity must be at most " + MAX_PER_ITEM);
         return quantity;
     }
 
-    public void addToCart(@NotNull HttpSession session, Authentication authentication, @NotNull Long bookId, int quantity) {
+    public void addToCart(@NotNull HttpSession session, Authentication authentication, @NotNull Long bookId,
+            int quantity) {
         User user = resolveUser(authentication);
         if (user == null) {
             throw new IllegalStateException("User not authenticated");
@@ -173,7 +180,8 @@ public class CartService {
         }
     }
 
-    public void updateQuantity(@NotNull HttpSession session, Authentication authentication, @NotNull Long bookId, int quantity) {
+    public void updateQuantity(@NotNull HttpSession session, Authentication authentication, @NotNull Long bookId,
+            int quantity) {
         User user = resolveUser(authentication);
         if (user == null) {
             throw new IllegalStateException("User not authenticated");
@@ -229,132 +237,159 @@ public class CartService {
         cartRepository.deleteByUser_Id(user.getId());
     }
 
-    public boolean saveCart(@NotNull HttpSession session, Authentication authentication) {
-        User user = resolveUser(authentication);
-        if (user == null) {
-            throw new IllegalStateException("User not authenticated");
+    private List<Item> resolveCheckoutItems(Cart cart, List<Long> bookIds) {
+        if (bookIds == null || bookIds.isEmpty()) {
+            return cart.getCartItems();
         }
-
-        var cart = getCart(session, authentication);
-        if (cart.getCartItems().isEmpty()) return false;
-        if (cart.getCartItems().size() > MAX_DISTINCT_ITEMS) {
-            throw new IllegalArgumentException("Cart cannot exceed " + MAX_DISTINCT_ITEMS + " different books");
-        }
-
-        var ids = cart.getCartItems().stream().map(Item::getBookId).toList();
-        var books = bookRepository.findAllById(ids);
-        if (books.size() != ids.size()) {
-            throw new IllegalArgumentException("Some books do not exist");
-        }
-        var bookMap = books.stream().collect(java.util.stream.Collectors.toMap(fit.hutech.spring.entities.Book::getId, b -> b));
-
-        // Validate again (active + stock) and calculate total from server-side price
-        double total = 0;
-        for (Item item : cart.getCartItems()) {
-            int qty = normalizeQuantity(item.getQuantity());
-            var book = bookMap.get(item.getBookId());
-            if (book == null) throw new IllegalArgumentException("Book not found");
-            if (!book.isActiveForSale()) throw new IllegalArgumentException("Book is not active for sale");
-            if (qty > book.getStockSafe()) throw new IllegalArgumentException("Quantity exceeds stock");
-            total += (book.getPrice() == null ? 0 : book.getPrice()) * qty;
-        }
-
-        // Decrease stock at checkout (SERIALIZABLE helps with concurrency)
-        for (Item item : cart.getCartItems()) {
-            int qty = normalizeQuantity(item.getQuantity());
-            var book = bookMap.get(item.getBookId());
-            if (book.getStock() != null) {
-                int remaining = book.getStockSafe() - qty;
-                if (remaining < 0) throw new IllegalArgumentException("Quantity exceeds stock");
-                book.setStock(remaining);
-            }
-        }
-        bookRepository.saveAll(books);
-
-        var invoice = new Invoice();
-        invoice.setInvoiceDate(new Date(new Date().getTime()));
-        invoice.setPrice(total);
-        invoiceRepository.save(invoice);
-
-        cart.getCartItems().forEach(item -> {
-            var items = new ItemInvoice();
-            items.setInvoice(invoice);
-            items.setQuantity(normalizeQuantity(item.getQuantity()));
-            items.setBook(bookMap.get(item.getBookId()));
-            itemInvoiceRepository.save(items);
-        });
-        clearCart(session, authentication);
-        return true;
+        Set<Long> selectedIds = new HashSet<>(bookIds);
+        return cart.getCartItems().stream().filter(i -> selectedIds.contains(i.getBookId())).toList();
     }
 
-    public boolean saveSelectedCart(@NotNull HttpSession session, Authentication authentication, List<Long> bookIds) {
+    private Invoice createPendingInvoiceInternal(@NotNull HttpSession session,
+            Authentication authentication,
+            List<Long> bookIds) {
         User user = resolveUser(authentication);
         if (user == null) {
             throw new IllegalStateException("User not authenticated");
         }
 
         var cart = getCart(session, authentication);
-        if (cart.getCartItems().isEmpty()) return false;
-        if (bookIds == null || bookIds.isEmpty()) return false;
+        if (cart.getCartItems().isEmpty())
+            return null;
 
-        Set<Long> selectedIds = new HashSet<>(bookIds);
-        var selectedItems = cart.getCartItems().stream()
-                .filter(i -> selectedIds.contains(i.getBookId()))
-                .toList();
-
-        if (selectedItems.isEmpty()) return false;
-
-        if (selectedItems.size() > MAX_DISTINCT_ITEMS) {
+        var checkoutItems = resolveCheckoutItems(cart, bookIds);
+        if (checkoutItems.isEmpty())
+            return null;
+        if (checkoutItems.size() > MAX_DISTINCT_ITEMS) {
             throw new IllegalArgumentException("Cart cannot exceed " + MAX_DISTINCT_ITEMS + " different books");
         }
 
-        var ids = selectedItems.stream().map(Item::getBookId).toList();
+        var ids = checkoutItems.stream().map(Item::getBookId).toList();
         var books = bookRepository.findAllById(ids);
         if (books.size() != ids.size()) {
             throw new IllegalArgumentException("Some books do not exist");
         }
-        var bookMap = books.stream().collect(java.util.stream.Collectors.toMap(fit.hutech.spring.entities.Book::getId, b -> b));
+        Map<Long, Book> bookMap = books.stream().collect(Collectors.toMap(Book::getId, b -> b));
 
         double total = 0;
-        for (Item item : selectedItems) {
+        for (Item item : checkoutItems) {
             int qty = normalizeQuantity(item.getQuantity());
             var book = bookMap.get(item.getBookId());
-            if (book == null) throw new IllegalArgumentException("Book not found");
-            if (!book.isActiveForSale()) throw new IllegalArgumentException("Book is not active for sale");
-            if (qty > book.getStockSafe()) throw new IllegalArgumentException("Quantity exceeds stock");
+            if (book == null)
+                throw new IllegalArgumentException("Book not found");
+            if (!book.isActiveForSale())
+                throw new IllegalArgumentException("Book is not active for sale");
+            if (qty > book.getStockSafe())
+                throw new IllegalArgumentException("Quantity exceeds stock");
             total += (book.getPrice() == null ? 0 : book.getPrice()) * qty;
         }
 
-        for (Item item : selectedItems) {
-            int qty = normalizeQuantity(item.getQuantity());
-            var book = bookMap.get(item.getBookId());
-            if (book.getStock() != null) {
-                int remaining = book.getStockSafe() - qty;
-                if (remaining < 0) throw new IllegalArgumentException("Quantity exceeds stock");
-                book.setStock(remaining);
+        Invoice invoice = new Invoice();
+        invoice.setInvoiceDate(new Date());
+        invoice.setPrice(total);
+        invoice.setUser(user);
+        invoice.setPaymentStatus(PaymentStatus.PENDING);
+        invoice.setPaymentMethod(PaymentMethod.VNPAY);
+        invoice = invoiceRepository.save(invoice);
+
+        for (Item item : checkoutItems) {
+            ItemInvoice invoiceItem = new ItemInvoice();
+            invoiceItem.setInvoice(invoice);
+            invoiceItem.setQuantity(normalizeQuantity(item.getQuantity()));
+            invoiceItem.setBook(bookMap.get(item.getBookId()));
+            itemInvoiceRepository.save(invoiceItem);
+        }
+
+        return invoice;
+    }
+
+    public Invoice createPendingInvoice(@NotNull HttpSession session, Authentication authentication) {
+        return createPendingInvoiceInternal(session, authentication, null);
+    }
+
+    public Invoice createPendingInvoice(@NotNull HttpSession session, Authentication authentication,
+            List<Long> bookIds) {
+        return createPendingInvoiceInternal(session, authentication, bookIds);
+    }
+
+    @Transactional
+    public Invoice confirmPayment(Long invoiceId, String transactionId, String responseCode, HttpSession session) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found"));
+        if (invoice.getPaymentStatus() == PaymentStatus.PAID) {
+            return invoice;
+        }
+        if (invoice.getPaymentStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException("Invoice is not pending payment");
+        }
+
+        var invoiceItems = itemInvoiceRepository.findByInvoice_Id(invoiceId);
+        var bookIds = invoiceItems.stream().map(item -> item.getBook().getId()).toList();
+        var books = bookRepository.findAllById(bookIds);
+        Map<Long, Book> bookMap = books.stream().collect(Collectors.toMap(Book::getId, b -> b));
+
+        for (ItemInvoice item : invoiceItems) {
+            Book book = bookMap.get(item.getBook().getId());
+            if (book == null) {
+                throw new IllegalArgumentException("Book not found");
             }
+            int qty = normalizeQuantity(item.getQuantity());
+            int currentStock = book.getStockSafe();
+            if (qty > currentStock) {
+                throw new IllegalArgumentException("Quantity exceeds stock");
+            }
+            int newStock = currentStock - qty;
+            book.setStock(newStock);
+            inventoryService.recordMovement(book,
+                    invoice.getUser(),
+                    invoice,
+                    StockMovementType.SALE,
+                    currentStock,
+                    newStock,
+                    "Thanh toán hóa đơn #" + invoice.getId());
         }
         bookRepository.saveAll(books);
 
-        var invoice = new Invoice();
-        invoice.setInvoiceDate(new Date(new Date().getTime()));
-        invoice.setPrice(total);
+        invoice.setPaymentStatus(PaymentStatus.PAID);
+        invoice.setPaymentMethod(
+                transactionId != null && transactionId.startsWith("MOCK-") ? PaymentMethod.MOCK : PaymentMethod.VNPAY);
+        invoice.setPaymentTransactionId(transactionId);
+        invoice.setPaymentMessage(responseCode);
+        invoice.setPaidAt(new Date());
         invoiceRepository.save(invoice);
 
-        selectedItems.forEach(item -> {
-            var items = new ItemInvoice();
-            items.setInvoice(invoice);
-            items.setQuantity(normalizeQuantity(item.getQuantity()));
-            items.setBook(bookMap.get(item.getBookId()));
-            itemInvoiceRepository.save(items);
-        });
+        if (session != null) {
+            Cart cart = (Cart) session.getAttribute(CART_SESSION_KEY);
+            if (cart != null) {
+                Set<Long> purchasedIds = new HashSet<>(bookIds);
+                cart.getCartItems().removeIf(item -> purchasedIds.contains(item.getBookId()));
+                if (cart.getCartItems().isEmpty()) {
+                    removeCart(session);
+                } else {
+                    updateCart(session, cart);
+                }
+            }
+        }
 
-        cart.getCartItems().removeIf(i -> selectedIds.contains(i.getBookId()));
-        updateCart(session, cart);
+        User user = invoice.getUser();
+        if (user != null) {
+            for (Long bookId : bookIds) {
+                cartRepository.deleteByUser_IdAndBook_Id(user.getId(), bookId);
+            }
+        }
 
-        selectedIds.forEach(bookId -> cartRepository.deleteByUser_IdAndBook_Id(user.getId(), bookId));
-        if (cart.getCartItems().isEmpty()) removeCart(session);
+        return invoice;
+    }
 
-        return true;
+    @Transactional
+    public Invoice failPayment(Long invoiceId, String responseCode, String message) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found"));
+        if (invoice.getPaymentStatus() == PaymentStatus.PAID) {
+            return invoice;
+        }
+        invoice.setPaymentStatus(PaymentStatus.FAILED);
+        invoice.setPaymentMessage(message != null ? message : responseCode);
+        return invoiceRepository.save(invoice);
     }
 }

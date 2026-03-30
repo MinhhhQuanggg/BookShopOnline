@@ -63,7 +63,7 @@ public class ApiController {
         book.setPrice(bookPostVm.price());
         book.setCategory(categoryService.getCategoryById(bookPostVm.categoryId()).orElse(null));
 
-        Book savedBook = bookService.addBook(book);
+        Book savedBook = bookService.addBook(book, null);
         return ResponseEntity.ok(BookGetVm.from(savedBook));
     }
 

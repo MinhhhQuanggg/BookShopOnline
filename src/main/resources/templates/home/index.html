@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -51,32 +50,34 @@
         }
     </style>
 </head>
-<body>
-<!-- HEADER -->
-<header th:replace="~{layout :: header}"></header>
 
-<!-- CONTAINER -->
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="home-hero">
-                <h1>Chào mừng bạn!</h1>
-                <p>
-                    Đây là hệ thống quản lý sách sử dụng <strong>Spring Boot</strong>
-                    <br>
-                    Kết nối cơ sở dữ liệu <strong>MySQL</strong>
-                    <br>
-                    Giao diện đơn giản · Hiện đại · Dễ sử dụng
-                </p>
+<body>
+    <!-- HEADER -->
+    <header th:replace="~{layout :: header}"></header>
+
+    <!-- CONTAINER -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="home-hero">
+                    <h1>Chào mừng bạn!</h1>
+                    <p>
+                        Đây là hệ thống quản lý sách sử dụng <strong>Spring Boot</strong>
+                        <br>
+                        Kết nối cơ sở dữ liệu <strong>MySQL</strong>
+                        <br>
+                        Giao diện đơn giản · Hiện đại · Dễ sử dụng
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- FOOTER -->
-<footer th:replace="~{layout :: footer}"></footer>
+    <!-- FOOTER -->
+    <footer th:replace="~{layout :: footer}"></footer>
 
-<script th:src="@{/js/bootstrap.min.js}"></script>
-<script th:src="@{/js/jquery-3.7.0.min.js}"></script>
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/jquery-3.7.0.min.js}"></script>
 </body>
+
 </html>

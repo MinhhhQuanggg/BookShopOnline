@@ -14,45 +14,45 @@ public class AppConfig {
     public List<Book> getBooks() {
         List<Book> books = new ArrayList<>();
 
-        books.add(new Book(
-                1L,
-                "Lập trình Web Spring Framework",
-                "Ánh Nguyễn",
-                29.99,
-                "Công nghệ thông tin"
-        ));
+        books.add(Book.builder()
+                .id(1L)
+                .title("Lap trinh Web Spring Framework")
+                .author("Anh Nguyen")
+                .price(29.99)
+                .stock(100)
+                .build());
 
-        books.add(new Book(
-                2L,
-                "Lập trình ứng dụng Java",
-                "Huy Cường",
-                45.63,
-                "Công nghệ thông tin"
-        ));
+        books.add(Book.builder()
+                .id(2L)
+                .title("Lap trinh ung dung Java")
+                .author("Huy Cuong")
+                .price(45.63)
+                .stock(100)
+                .build());
 
-        books.add(new Book(
-                3L,
-                "Lập trình Web Spring Boot",
-                "Xuân Nhân",
-                12.0,
-                "Công nghệ thông tin"
-        ));
+        books.add(Book.builder()
+                .id(3L)
+                .title("Lap trinh Web Spring Boot")
+                .author("Xuan Nhan")
+                .price(12.0)
+                .stock(100)
+                .build());
 
-        books.add(new Book(
-                4L,
-                "Lập trình Web Spring MVC",
-                "Ánh Nguyễn",
-                12.0,
-                "Công nghệ thông tin"
-        ));
+        books.add(Book.builder()
+                .id(4L)
+                .title("Lap trinh Web Spring MVC")
+                .author("Anh Nguyen")
+                .price(12.0)
+                .stock(100)
+                .build());
 
-        books.add(new Book(
-                5L,
-                "Think Java: How to Think Like a Computer Scientist",
-                "Allen B. Downey và Chris Mayfield",
-                858.148,
-                "Khoa học máy tính"
-        ));
+        books.add(Book.builder()
+                .id(5L)
+                .title("Think Java: How to Think Like a Computer Scientist")
+                .author("Allen B. Downey and Chris Mayfield")
+                .price(858.148)
+                .stock(100)
+                .build());
 
         return books;
     }

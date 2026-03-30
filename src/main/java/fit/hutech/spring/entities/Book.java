@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.Hibernate;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,14 +28,17 @@ public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "title", length = 50, nullable = false)
     @Size(min = 1, max = 50, message = "Title must be between 1 and 50 characters")
     @NotBlank(message = "Title must not be blank")
     private String title;
+
     @Column(name = "author", length = 50, nullable = false)
     @Size(min = 1, max = 50, message = "Author must be between 1 and 50 characters")
     @NotBlank(message = "Author must not be blank")
     private String author;
+
     @Column(name = "price")
     @DecimalMin(value = "0", inclusive = true, message = "Price must be at least 0")
     @DecimalMax(value = "1000000000", inclusive = true, message = "Price must be at most 1000000000")
@@ -49,14 +53,18 @@ public class Book {
     @NotNull(message = "Active status is required")
     @Builder.Default
     private Boolean active = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     @ValidCategoryId
     @ToString.Exclude
     private Category category;
+
+    @Builder.Default
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<ItemInvoice> itemInvoices = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ToString.Exclude
@@ -69,8 +77,7 @@ public class Book {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o))
             return false;
         Book book = (Book) o;
-        return getId() != null && Objects.equals(getId(),
-                book.getId());
+        return getId() != null && Objects.equals(getId(), book.getId());
     }
 
     @Override

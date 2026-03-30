@@ -51,7 +51,7 @@ public class RoleService {
     }
 
     /**
-     * Cập nhật role
+    * Cập nhật role
      */
     @Transactional
     public Role updateRole(@NotNull Long id, @NotNull Role updatedRole) {
@@ -76,7 +76,7 @@ public class RoleService {
     }
 
     /**
-     * Xóa role (chỉ cho phép nếu không có user nào đang sử dụng)
+    * Xóa role (chỉ cho phép nếu không có user nào đang sử dụng)
      */
     @Transactional
     public void deleteRole(@NotNull Long id) {
@@ -96,14 +96,14 @@ public class RoleService {
     }
 
     /**
-     * Kiểm tra role có tồn tại không
+    * Kiểm tra role có tồn tại không
      */
     public boolean existsByName(@NotNull String name) {
         return roleRepository.findByName(name) != null;
     }
 
     /**
-     * Đếm số lượng users của một role
+    * Đếm số lượng users của một role
      */
     public int countUsersByRoleId(@NotNull Long roleId) {
         Role role = roleRepository.findRoleById(roleId);
@@ -113,3 +113,4 @@ public class RoleService {
         return role.getUsers().size();
     }
 }
+

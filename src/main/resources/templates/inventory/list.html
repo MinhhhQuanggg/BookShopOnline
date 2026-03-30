@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho sách</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<header th:replace="~{layout :: header}"></header>
+<main class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Kho sách</h1>
+            <div class="text-muted">L?ch s? nh?p, di?u ch?nh và bán hàng theo t?ng sách.</div>
+        </div>
+        <a href="/books" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> V? danh sách sách
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Th?i gian</th>
+                        <th>Sách</th>
+                        <th>Lo?i</th>
+                        <th>Cu</th>
+                        <th>M?i</th>
+                        <th>Bi?n d?ng</th>
+                        <th>Ghi chú</th>
+                        <th>Hóa don</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(movements)}">
+                        <td colspan="8" class="text-center py-5 text-muted">Chua có d? li?u kho.</td>
+                    </tr>
+                    <tr th:each="movement : ${movements}">
+                        <td th:text="${#temporals.format(movement.createdAt, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                        <td>
+                            <div class="fw-semibold" th:text="${movement.book.title}"></div>
+                            <div class="text-muted small" th:text="${movement.book.author}"></div>
+                        </td>
+                        <td th:text="${movement.movementType}"></td>
+                        <td th:text="${movement.previousStock}"></td>
+                        <td th:text="${movement.newStock}"></td>
+                        <td th:text="${movement.quantityChange}"></td>
+                        <td th:text="${movement.note}"></td>
+                        <td th:text="${movement.invoice != null ? movement.invoice.id : '-'}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

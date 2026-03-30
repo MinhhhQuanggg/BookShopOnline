@@ -13,13 +13,13 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 
 import java.util.Map;
 
@@ -39,9 +39,7 @@ public class SecurityConfig {
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            response.sendRedirect("/error/403");
-        };
+        return (request, response, accessDeniedException) -> response.sendRedirect("/error/403");
     }
 
     @Bean
@@ -54,7 +52,6 @@ public class SecurityConfig {
         http
                 .addFilterBefore(invalidateSessionOnRestartFilter, SecurityContextHolderFilter.class)
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints - Guest có thể truy cập
                         .requestMatchers(
                                 "/register",
                                 "/login",
@@ -63,21 +60,16 @@ public class SecurityConfig {
                                 "/images/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
-                                "/error/**")
+                                "/error/**",
+                                "/payments/**")
                         .permitAll()
-                        // Yêu cầu đăng nhập để xem sách (Bỏ chế độ Guest)
                         .requestMatchers("/books", "/books/", "/books/list", "/home", "/").authenticated()
-                        // User và Admin - Mua hàng (cần đăng nhập)
                         .requestMatchers("/cart/**", "/books/add-to-cart").authenticated()
-                        // Admin-only endpoints - Quản lý sách
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/books/add", "/books/edit/**", "/books/edit", "/books/delete/**")
                         .hasAnyAuthority("ADMIN", "USER")
-                        // Các endpoints sách khác (nếu có) - cần đăng nhập
                         .requestMatchers("/books/**").hasAnyAuthority("USER", "ADMIN")
-                        // Phân quyền cho API
                         .requestMatchers("/api/**").hasAnyAuthority("ADMIN", "USER")
-                        // All other requests need authentication
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(accessDeniedHandler()))

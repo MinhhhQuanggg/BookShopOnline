@@ -93,7 +93,7 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Cập nhật nhiều roles cho user (thay thế toàn bộ roles hiện tại)
+    * Cập nhật nhiều roles cho user (thay thế toàn bộ roles hiện tại)
      */
     @Transactional
     public void updateUserRoles(@NotNull Long userId, @NotNull Set<Long> roleIds) {
@@ -115,7 +115,7 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Thêm một role cho user (giữ nguyên các roles hiện tại)
+    * Thêm một role cho user (giữ nguyên các roles hiện tại)
      */
     @Transactional
     public void addRoleToUser(@NotNull Long userId, @NotNull String roleName) {
@@ -137,7 +137,7 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Xóa một role khỏi user
+    * Xóa một role khỏi user
      */
     @Transactional
     public void removeRoleFromUser(@NotNull Long userId, @NotNull String roleName) {
@@ -155,7 +155,7 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Kiểm tra user có role cụ thể không
+    * Kiểm tra user có role cụ thể không
      */
     public boolean hasRole(@NotNull Long userId, @NotNull String roleName) {
         User user = userRepository.findById(userId).orElse(null);
@@ -167,7 +167,7 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Lấy danh sách users theo role
+    * Lấy danh sách users theo role
      */
     public List<User> getUsersByRole(@NotNull String roleName) {
         fit.hutech.spring.entities.Role role = roleRepository.findByName(roleName);

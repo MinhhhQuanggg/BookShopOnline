@@ -4,7 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Custom error controller để xử lý access denied và các lỗi khác
+ * Custom error controller Ã„â€˜Ã¡Â»Æ’ xÃ¡Â»Â­ lÃƒÂ½ access denied vÃƒÂ  cÃƒÂ¡c lÃ¡Â»â€”i khÃƒÂ¡c
  */
 @Controller
 public class CustomErrorController {

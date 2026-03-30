@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -18,7 +18,14 @@
 	<artifactId>2280602561</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Thai Minh Quang</name>
-	<description>Thực hành lập trình ứng dụng với java</description>
+	<description> </description>
+
+	<properties>
+		<java.version>21</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+	</properties>
 
 	<url/>
 	<licenses>
@@ -33,10 +40,6 @@
 		<tag/>
 		<url/>
 	</scm>
-
-	<properties>
-		<java.version>21</java.version>
-	</properties>
 
 	<dependencies>
 
@@ -152,7 +155,7 @@
 	<build>
 		<plugins>
 
-			<!-- ✅ BẮT BUỘC nếu dùng Lombok -->
+			<!-- Bắt buộc nếu dùng Lombok -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -166,11 +169,12 @@
 				</configuration>
 			</plugin>
 
-			<!-- ✅ BẮT BUỘC cho Spring Boot -->
-			<plugin>
+			<!-- Bắt buộc cho Spring Boot -->
+						<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<mainClass>fit.hutech.spring.ThaiMinhQuangApplication</mainClass>
 					<!-- Không đóng gói Lombok vào file jar -->
 					<excludes>
 						<exclude>
@@ -185,3 +189,8 @@
 	</build>
 
 </project>
+
+
+
+
+
