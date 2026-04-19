@@ -2,7 +2,7 @@
 
 BookShopOnline là một ứng dụng thương mại điện tử chuyên biệt dành cho nhà sách. Ứng dụng hỗ trợ quản lý kho, giỏ hàng, giao dịch, thanh toán qua cổng VNPAY và cung cấp tính năng tương tác khách hàng thời gian thực (real-time chat) thông qua WebSocket.
 
-## 🚀 Các tính năng chính (Features)
+#Các tính năng chính (Features)
 
 - **Quản lý Kho sách (Inventory)**: Lưu trữ thông tin sách, theo dõi số lượng tồn kho và lịch sử nhập/xuất.
 - **Giỏ hàng & Thanh toán (Cart & Checkout)**: Quản lý giỏ hàng của người dùng, thanh toán trực tuyến bảo mật thông qua VNPAY.
@@ -11,7 +11,7 @@ BookShopOnline là một ứng dụng thương mại điện tử chuyên biệt
 - **Phân quyền bảo mật (Security)**: Sử dụng Spring Security để kiểm soát quyền hạn (ADMIN / USER) và bảo vệ dữ liệu.
 - **API**: Cung cấp các RESTful API chuẩn mực.
 
-## 🛠 Công nghệ sử dụng (Tech Stack)
+#Công nghệ sử dụng (Tech Stack)
 
 - **Backend**: Java 21, Spring Boot 3.x, Spring Data JPA, Spring Security, Spring WebSocket.
 - **Database**: MySQL.
@@ -19,14 +19,14 @@ BookShopOnline là một ứng dụng thương mại điện tử chuyên biệt
 - **Frontend**: HTML/CSS, JavaScript, Bootstrap 5, Thymeleaf.
 - **Build tool**: Maven.
 
-## ⚙️ Hướng dẫn cài đặt và chạy dự án (How to run)
+#Hướng dẫn cài đặt và chạy dự án (How to run)
 
-### Yêu cầu hệ thống (Prerequisites)
+#Yêu cầu hệ thống (Prerequisites)
 1. **JDK 21** trở lên.
 2. **MySQL Server** (đang chạy ở port mặc định 3306).
 3. *(Tùy chọn)* RabbitMQ nếu muốn thiết lập Message Broker nâng cao cho WebSocket.
 
-### Các bước cài đặt
+#Các bước cài đặt
 
 **Bước 1: Clone dự án**
 ```bash
@@ -72,7 +72,7 @@ Sau khi ứng dụng khởi động thành công, mở trình duyệt và truy c
 
 ---
 
-## 🔒 Kiểm thử và Đăng nhập
+#Kiểm thử và Đăng nhập
 - Ở lần chạy đầu tiên, hệ thống sẽ tự động tạo các Role cần thiết (`ADMIN`, `USER`). 
 - Bạn có thể vào trang `/login` để tạo tài khoản mới và dùng tài khoản đó trải nghiệm các chức năng User.
 - Để vào trang quản trị viên, hãy set cứng quyền Admin cho tài khoản của bạn trực tiếp trong Database (bảng User-Role) nếu chưa có giao diện gán quyền.
